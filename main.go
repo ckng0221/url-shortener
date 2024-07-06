@@ -49,6 +49,26 @@ func main() {
 		c.JSON(200, gin.H{"shorten_url": shortenUrlWithBase})
 	})
 
+	r.GET("/url-shortener/:id", func(c *gin.Context) {
+		var url models.Url
+		id := c.Param("id")
+		err := initializers.Db.First(&url, id).Error
+		if err != nil {
+			log.Println(err.Error())
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.AbortWithStatusJSON(404, gin.H{"error": "ID not found"})
+				return
+			}
+			c.AbortWithStatus(500)
+			return
+		}
+		baseUrl := os.Getenv("BASE_URL")
+		shortenUrlWithBase := fmt.Sprintf("%s/urls/%s", baseUrl, url.ShortenUrl)
+		url.ShortenUrl = shortenUrlWithBase
+
+		c.JSON(200, url)
+	})
+
 	r.POST("/url-shortener", func(c *gin.Context) {
 		// Create url in db
 		var url models.Url

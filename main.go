@@ -12,7 +12,6 @@ import (
 	"url-shortener/utils"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -30,7 +29,7 @@ func main() {
 		c.String(200, "Hello URL shortener")
 	})
 
-	r.GET("/url-shortener", func(c *gin.Context) {
+	r.GET("/shorten-urls", func(c *gin.Context) {
 		var url models.Url
 		queryUrl := c.Query("url")
 		err := initializers.Db.Where("url = ?", queryUrl).Find(&url).Error
@@ -49,7 +48,7 @@ func main() {
 		c.JSON(200, gin.H{"shorten_url": shortenUrlWithBase})
 	})
 
-	r.GET("/url-shortener/:id", func(c *gin.Context) {
+	r.GET("/shorten-urls/:id", func(c *gin.Context) {
 		var url models.Url
 		id := c.Param("id")
 		err := initializers.Db.First(&url, id).Error
@@ -69,7 +68,7 @@ func main() {
 		c.JSON(200, url)
 	})
 
-	r.POST("/url-shortener", func(c *gin.Context) {
+	r.POST("/shorten-urls", func(c *gin.Context) {
 		// Create url in db
 		var url models.Url
 		err := c.ShouldBind(&url)
@@ -94,11 +93,11 @@ func main() {
 		err = initializers.Db.Create(&url).Error
 		if err != nil {
 			log.Println(err.Error())
-			var mysqlErr *mysql.MySQLError
-			if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
-				c.AbortWithStatusJSON(400, gin.H{"error": "URL already exists"})
-				return
-			}
+			// var mysqlErr *mysql.MySQLError
+			// if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+			// 	c.AbortWithStatusJSON(400, gin.H{"error": "URL already exists"})
+			// 	return
+			// }
 
 			c.AbortWithStatus(500)
 			return

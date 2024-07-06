@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 	"url-shortener/initializers"
 	"url-shortener/models"
 	"url-shortener/utils"
@@ -128,6 +129,11 @@ func main() {
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
+		// update usage count
+		expression := "usage_count + 1"
+		initializers.Db.Model(&url).UpdateColumn("usage_count", gorm.Expr(expression))
+		initializers.Db.Model(&url).Update("last_accessed", time.Now())
+
 		c.Redirect(http.StatusTemporaryRedirect, url.Url)
 	})
 

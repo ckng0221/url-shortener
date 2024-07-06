@@ -4,4 +4,4 @@ run_server_dev:
 create_url:
 	curl --location 'localhost:8000/url-shortener' \
 		--header 'Content-Type: application/json' \
-		--data '{ "url": "www.google.com" }'
+		--data '{ "url": "https://www.google.com" }'

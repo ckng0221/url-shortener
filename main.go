@@ -4,12 +4,15 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"url-shortener/initializers"
 	"url-shortener/models"
+	shortner "url-shortener/shortener"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-sql-driver/mysql"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -34,6 +37,10 @@ func main() {
 		if err != nil {
 			log.Println(err.Error())
 			c.AbortWithStatus(500)
+			return
+		}
+		if url.ID == 0 {
+			c.Status(200)
 			return
 		}
 		c.JSON(200, gin.H{"shorten_url": url.ShortenUrl})
@@ -61,7 +68,7 @@ func main() {
 		}
 
 		baseUrl := os.Getenv("BASE_URL")
-		shortenUrlPath := convertBase62(int(url.ID))
+		shortenUrlPath := shortner.ConvertIntegerToBase62(int(url.ID))
 		url.ShortenUrl = fmt.Sprintf("%s/urls/%s", baseUrl, shortenUrlPath)
 		err = initializers.Db.Updates(&url).Error
 		if err != nil {
@@ -72,9 +79,24 @@ func main() {
 	})
 
 	// Redirect
-	r.GET("/url/:path", func(c *gin.Context) {
-		//TODO: reverse path to integer ID
-		//TODO: Get id and return
+	r.GET("/urls/:path", func(c *gin.Context) {
+		var url models.Url
+		path := c.Param("path")
+
+		id := shortner.ConvertBase62ToInteger(path)
+		// fmt.Println("id", id)
+
+		err := initializers.Db.First(&url, id).Error
+		if err != nil {
+			log.Println(err.Error())
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.AbortWithStatusJSON(404, gin.H{"error": "url not found"})
+				return
+			}
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+		c.Redirect(http.StatusTemporaryRedirect, url.Url)
 	})
 
 	r.Run()

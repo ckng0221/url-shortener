@@ -1,10 +1,27 @@
 # URL Shortener
 
-A URL Shortener API, that creates shorten URL based on user input. The shorten URL is based on `base62` character using `0-9`, `a-z`, `A-Z`.
+A URL Shortener API web API, that creates shorten URL based on user's input. The shorten URL is created using `base62` characters, ranging from `0-9`, `a-z`, `A-Z` (total of 62 characters).
 
 ## How it works
 
-The URL Shortener uses distributed 64-bit unique ID generator (based on Twitter's Snowflake ID) to generate an ID for the URL record. The ID is converted into integer, and then converted to its base62 representative, and stored as the shorten URL path.
+The application has a distributed 64-bit unique and sortable ID generator (based on Twitter's [Snowflake ID](https://en.wikipedia.org/wiki/Snowflake_ID)) that is used to generate a unique ID for each URL record. The structure of ID is as follows:
+
+| Component | 0   | timestamp | datacenterID | machineID | sequenceNumber |
+| --------- | --- | --------- | ------------ | --------- | -------------- |
+| Bit(s)    | 1   | 41        | 5            | 5         | 12             |
+
+- `0`: Placeholder, could indicate the sign, remain for future use.
+- `timestamp`: Unix timestamp in milliseconds.
+- `dataCenterID`: Data Center ID. Can have maximum of 32 data center IDs.
+- `machineId`: Machine ID. Can have maximum of 32 machine (nodes) in each data center.
+- `sequenceNumber`: Sequence number. Can have maximum of 4096 sequence number per millisecond.
+
+Example generated ID:
+
+- Binary: `0110010000100001110110100100011110011110100110101110000000000000`
+- Decimal: `7215288079162728448`
+
+Upon user's request, a unique ID is generated. The ID is then converted to its base62 representative, and stored as the shorten URL path.
 
 Eg.
 

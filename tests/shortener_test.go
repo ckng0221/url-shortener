@@ -3,7 +3,7 @@ package tests
 import (
 	"fmt"
 	"testing"
-	shortner "url-shortener/shortener"
+	shortner "url-shortener/utils"
 )
 
 func Test_ConvertIntegerToBase62(t *testing.T) {

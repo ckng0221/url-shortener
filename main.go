@@ -6,14 +6,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"url-shortener/initializers"
 	"url-shortener/models"
-	shortner "url-shortener/shortener"
+	"url-shortener/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 func init() {
@@ -23,11 +23,11 @@ func init() {
 }
 
 func main() {
+	hashTable := make(map[int]int)
 
 	r := gin.Default()
 	r.GET("/", func(c *gin.Context) {
 		c.String(200, "Hello URL shortener")
-
 	})
 
 	r.GET("/url-shortener", func(c *gin.Context) {
@@ -39,11 +39,14 @@ func main() {
 			c.AbortWithStatus(500)
 			return
 		}
-		if url.ID == 0 {
+		if url.ID == "" {
 			c.Status(200)
 			return
 		}
-		c.JSON(200, gin.H{"shorten_url": url.ShortenUrl})
+		baseUrl := os.Getenv("BASE_URL")
+		shortenUrlWithBase := fmt.Sprintf("%s/urls/%s", baseUrl, url.ShortenUrl)
+
+		c.JSON(200, gin.H{"shorten_url": shortenUrlWithBase})
 	})
 
 	r.POST("/url-shortener", func(c *gin.Context) {
@@ -51,10 +54,24 @@ func main() {
 		var url models.Url
 		err := c.ShouldBind(&url)
 		if err != nil {
+			log.Print(err.Error())
 			c.AbortWithStatusJSON(400, map[string]any{"error": "invalid request body"})
 			return
 		}
-		err = initializers.Db.Clauses(clause.Returning{}).Create(&url).Error
+		idString := utils.IdGenerator(&hashTable)
+		id, err := strconv.Atoi(idString)
+		if err != nil {
+			log.Print(err.Error())
+			c.AbortWithStatus(500)
+			return
+		}
+
+		shortenUrlPath := utils.ConvertIntegerToBase62(id)
+		url.ShortenUrl = shortenUrlPath
+
+		url.ID = idString
+
+		err = initializers.Db.Create(&url).Error
 		if err != nil {
 			log.Println(err.Error())
 			var mysqlErr *mysql.MySQLError
@@ -68,13 +85,9 @@ func main() {
 		}
 
 		baseUrl := os.Getenv("BASE_URL")
-		shortenUrlPath := shortner.ConvertIntegerToBase62(int(url.ID))
-		url.ShortenUrl = fmt.Sprintf("%s/urls/%s", baseUrl, shortenUrlPath)
-		err = initializers.Db.Updates(&url).Error
-		if err != nil {
-			c.AbortWithStatus(500)
-			return
-		}
+		shortenUrlWithBase := fmt.Sprintf("%s/urls/%s", baseUrl, shortenUrlPath)
+		url.ShortenUrl = shortenUrlWithBase
+
 		c.JSON(201, url)
 	})
 
@@ -83,7 +96,7 @@ func main() {
 		var url models.Url
 		path := c.Param("path")
 
-		id := shortner.ConvertBase62ToInteger(path)
+		id := utils.ConvertBase62ToInteger(path)
 		// fmt.Println("id", id)
 
 		err := initializers.Db.First(&url, id).Error
@@ -99,5 +112,6 @@ func main() {
 		c.Redirect(http.StatusTemporaryRedirect, url.Url)
 	})
 
+	go utils.ResetHashTable(&hashTable)
 	r.Run()
 }

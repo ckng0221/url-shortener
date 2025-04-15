@@ -10,8 +10,10 @@ import (
 	"time"
 	"url-shortener/initializers"
 	"url-shortener/models"
+
 	"url-shortener/utils"
 
+	"github.com/ckng0221/snowid"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -23,8 +25,6 @@ func init() {
 }
 
 func main() {
-	hashTable := make(map[int]int)
-
 	r := gin.Default()
 	r.GET("/", func(c *gin.Context) {
 		c.String(200, "Hello URL shortener")
@@ -78,7 +78,30 @@ func main() {
 			c.AbortWithStatusJSON(400, map[string]any{"error": "invalid request body"})
 			return
 		}
-		idString := utils.IdGenerator(&hashTable)
+
+		dataCenterIdStr := os.Getenv("DATA_CENTER_ID")
+		machineIdStr := os.Getenv("MACHINE_ID")
+
+		dataCenterId, err := strconv.Atoi(dataCenterIdStr)
+		if err != nil {
+			log.Fatalf("Invalid DATA_CENTER_ID: %v", err)
+		}
+
+		machineId, err := strconv.Atoi(machineIdStr)
+		if err != nil {
+			log.Fatalf("Invalid MACHINE_ID: %v", err)
+		}
+
+		s, err := snowid.NewSnowIdGenerator(dataCenterId, machineId, snowid.DefaultEpoch)
+		if err != nil {
+			log.Fatalf("Failed to Initiate SnowID generator: %v", err)
+		}
+		if err != nil {
+			log.Print(err.Error())
+			c.AbortWithStatus(500)
+			return
+		}
+		idString := s.GenerateId().String()
 		id, err := strconv.Atoi(idString)
 		if err != nil {
 			log.Print(err.Error())
@@ -137,6 +160,5 @@ func main() {
 		c.Redirect(http.StatusTemporaryRedirect, url.Url)
 	})
 
-	go utils.ResetHashTable(&hashTable)
 	r.Run()
 }

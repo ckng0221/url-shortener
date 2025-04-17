@@ -3,7 +3,7 @@ module url-shortener
 go 1.24.0
 
 require (
-	github.com/ckng0221/snowid v0.1.1
+	github.com/ckng0221/snowid v0.2.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/joho/godotenv v1.5.1
 	gorm.io/driver/mysql v1.5.7

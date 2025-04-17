@@ -101,7 +101,13 @@ func main() {
 			c.AbortWithStatus(500)
 			return
 		}
-		idString := s.GenerateId().String()
+		idObj, err := s.GenerateId()
+		if err != nil {
+			log.Print(err.Error())
+			c.AbortWithStatus(500)
+			return
+		}
+		idString := idObj.String()
 		id, err := strconv.Atoi(idString)
 		if err != nil {
 			log.Print(err.Error())

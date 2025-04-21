@@ -1,3 +1,5 @@
+[![Tests](https://github.com/ckng0221/url-shortener/actions/workflows/ci.yml/badge.svg)](https://github.com/ckng0221/url-shortener/actions/workflows/ci.yml)
+
 # URL Shortener
 
 A URL Shortener API web API, that creates shorten URL based on user's input. The shorten URL is created using `base62` characters, ranging from `0-9`, `a-z`, `A-Z` (total of 62 characters).

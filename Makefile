@@ -2,6 +2,11 @@
 run_server_dev:
 	CompileDaemon -command="./url-shortener"
 
+test_all: test build
+
+test:
+	go test ./... 
+
 build:
 	go build .
 

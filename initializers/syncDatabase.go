@@ -1,6 +1,6 @@
 package initializers
 
-import "url-shortener/models"
+import "github.com/ckng0221/url-shortener/models"
 
 func SynDatabase() {
 	Db.AutoMigrate(

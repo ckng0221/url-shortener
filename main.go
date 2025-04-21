@@ -8,12 +8,11 @@ import (
 	"os"
 	"strconv"
 	"time"
-	"url-shortener/initializers"
-	"url-shortener/models"
-
-	"url-shortener/utils"
 
 	"github.com/ckng0221/snowid"
+	"github.com/ckng0221/url-shortener/initializers"
+	"github.com/ckng0221/url-shortener/models"
+	"github.com/ckng0221/url-shortener/utils"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )

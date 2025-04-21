@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"fmt"
 	"math"
+	"strconv"
 )
 
 // Directly hardcode hashtable
@@ -138,15 +138,15 @@ var Base62ToDecimalMap = map[string]int{
 
 // if don't wish to hardcode
 // however hashtable should be (slightly) faster
-func mapBase62String(n int) string {
+func MapBase62String(n int) string {
 	var s string
 	switch {
 	case n >= 0 && n < 10:
-		s = fmt.Sprint(n)
+		s = strconv.Itoa(n)
 	case n >= 10 && n < 36:
-		s = string(n - 10 + 'a')
+		s = string(rune(n - 10 + 'a'))
 	case n >= 36 && n < 62:
-		s = string(n - 36 + 'A')
+		s = string(rune(n - 36 + 'A'))
 	}
 
 	return s
@@ -158,8 +158,19 @@ func ConvertIntegerToBase62(n int) string {
 	for n != 0 {
 		r := n % BASE
 		n /= BASE
-		// base62string := mapBase62String(r)
 		base62string := DecimalToBase62Map[r]
+		s = base62string + s
+	}
+	return s
+}
+
+func ConvertIntegerToBase62WithMap(n int) string {
+	var s string
+	var BASE int = 62
+	for n != 0 {
+		r := n % BASE
+		n /= BASE
+		base62string := MapBase62String(r)
 		s = base62string + s
 	}
 	return s
